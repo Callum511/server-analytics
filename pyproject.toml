@@ -18,7 +18,7 @@ Source = "https://github.com/Callum511/server-analytics"
 # Documentation = ""
 
 [project.scripts]
-antistasi-logbook = "antistasi_server_analytics.__main__:main"
+antistasi-server-analytics = "antistasi_server_analytics.__main__:main"
 
 [project.optional-dependencies]
 
