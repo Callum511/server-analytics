@@ -1,0 +1,122 @@
+[build-system]
+build-backend = "flit_core.buildapi"
+requires = ["flit_core >=3.2,<4"]
+
+[project]
+name = "antistasi_server_analytics"
+authors = [{ name = "Callum511" }, { name = "Giddius" }]
+license = { file = "LICENSE" }
+readme = { file = "README.md", content-type = "text/markdown" }
+description = "WiP"
+dynamic = ['version']
+requires-python = ">=3.10"
+dependencies = []
+
+[project.urls]
+Source = "https://github.com/Callum511/server-analytics"
+# homepage = ""
+# Documentation = ""
+
+[project.scripts]
+antistasi-server-analytics = "antistasi_server_analytics.__main__:main"
+
+[project.optional-dependencies]
+
+[tool.flit.sdist]
+exclude = [
+    "misc",
+    "temp",
+    "docs",
+    "tools",
+    ".pydeps",
+    "tests",
+    ".gitattributes",
+    ".gitignore",
+    ".editorconfig",
+    "planning.todo",
+    "tasks.py",
+    "designer_files",
+    ".vscode",
+    ".favorites.json",
+    ".venv",
+    ".pytest_cache",
+    "__pycache__",
+]
+
+[tool.autopep8]
+ignore = ["E402", "E501", "E731"]
+max_line_length = 250
+
+[tool.isort]
+balanced_wrapping = true
+ensure_newline_before_comments = true
+group_by_package = true
+import_heading_firstparty = "* Local Imports --------------------------------------------------------------------------------------->"
+import_heading_gid = "* Gid Imports ----------------------------------------------------------------------------------------->"
+import_heading_qt = "* Qt Imports --------------------------------------------------------------------------------------->"
+import_heading_stdlib = "* Standard Library Imports ---------------------------------------------------------------------------->"
+import_heading_thirdparty = "* Third Party Imports --------------------------------------------------------------------------------->"
+known_gid = ["gid*"]
+known_qt = ["PyQt5", "PyQt6", "PySide6", "pyqtgraph"]
+length_sort = true
+line_length = 200
+lines_after_imports = 1
+sections = [
+    "FUTURE",
+    "STDLIB",
+    "QT",
+    "THIRDPARTY",
+    "GID",
+    "FIRSTPARTY",
+    "LOCALFOLDER",
+]
+indented_import_headings = false
+
+[tool.pytest.ini_options]
+# addopts = "-rA -vv --durations=0 --capture=tee-sys --show-capture=all --color=auto --code-highlight=yes --cov=antistasi_logbook --cov-report html"
+addopts = "-rA -vv --durations=0 --cache-clear --capture=tee-sys --show-capture=all --color=auto --code-highlight=yes -p no:pytest_cov --count=1"
+
+
+[tool.coverage.report]
+omit = ["**/__init__.py"]
+exclude_lines = [
+    "if __name__ == .__main__.:",
+    "def __rich__",
+    "def __repr__",
+    "if TYPE_CHECKING:",
+    "if sys.version_info >= (3, 11):",
+    "from typing import Self",
+]
+
+[tool.coverage.html]
+directory = "tools/reports/coverage/html"
+
+[tool.autoflake]
+# additional_imports=None
+expand_star_imports = true
+remove_all_unused_imports = true
+remove_duplicate_keys = false
+remove_unused_variables = false
+ignore_init_module_imports = false
+
+[tool.gid_tasks.imports_cleaner]
+exclude_globs = [
+    "**/sqf_syntax_data.py",
+    "**/antistasi_logbook_resources.py",
+    "**/antistasi_logbook_resources_accessor.py",
+]
+exclude_init_files = true
+ignore_missing_import_section = true
+
+[tool.setuptools]
+packages = ["antistasi_logbook"]
+
+[tool.setuptools.dynamic]
+version = { attr = "antistasi_logbook.__version__" }
+
+
+[tool.pyright]
+
+
+[tool.ruff]
+ignore = ["E501", "E402", "E731"]
