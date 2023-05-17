@@ -142,6 +142,22 @@ class PlayerList:
             total += player.amount_connections
         return total / len(self.players)
 
+    def mode_connections(self):
+        connections = []
+        for player in self.players:
+            connections.append(player.amount_connections)
+        return max(set(connections), key=connections.count)
+
+    def median_connections(self):
+        connections = []
+        for player in self.players:
+            connections.append(player.amount_connections)
+        connections.sort()
+        if len(connections) % 2 == 0:
+            return (connections[int(len(connections) / 2)] + connections[int(len(connections) / 2 - 1)]) / 2
+        else:
+            return connections[int(len(connections) / 2)]
+
     def unique_all_time(self):
         steamids = []
         for player in self.players:
@@ -242,6 +258,8 @@ def main():
     # sort the frequent flyers by connections
     frequent_flyers_sorted = sorted(frequent_flyers, key=lambda x: x.amount_connections, reverse=True)
     print(f"Average connections: {players.average_connections():.3f}")
+    print(f"Mode connections: {players.mode_connections()}")
+    print(f"Median connections: {players.median_connections()}")
     print(f"Unique players (all time): {players.unique_all_time():,}")
     print(f"New players (30 days): {len(players.new30d()):,}")
     print(f"Frequent flyers: {len(frequent_flyers_sorted):,}")
