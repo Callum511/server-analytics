@@ -1,0 +1,9 @@
+pylint
+autopep8
+invoke
+pp-ez
+pprintpp
+memory-profiler
+line_profiler[all]
+isort
+autoflake
