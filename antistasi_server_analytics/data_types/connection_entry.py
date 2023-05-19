@@ -38,8 +38,6 @@ THIS_FILE_DIR = Path(__file__).parent.absolute()
 
 @enum.unique
 class ConnectionType(enum.Enum):
-    NO_TYPE = enum.auto()
-
     CONNECTED = enum.auto()
     CONNECTING = enum.auto()
 
@@ -48,9 +46,6 @@ class ConnectionType(enum.Enum):
 
     @classmethod
     def _missing_(cls, value: object) -> Any:
-        if value is None:
-            return cls.NO_TYPE
-
         if isinstance(value, str):
             try:
                 return cls._member_map_[value.upper()]
@@ -95,7 +90,7 @@ class ConnectionEntry:
     @classmethod
     def from_dict(cls, in_dict: Mapping[str, object]) -> "ConnectionEntry":
 
-        return cls(connection_type=ConnectionType(in_dict.get("connection_type", None)),
+        return cls(connection_type=ConnectionType(in_dict["connection_type"]),
                    steamid=in_dict["player_id"],
                    name=in_dict["player_name"],
                    recorded_at=cls._recorded_at_converter(in_dict["recorded_at"]),
