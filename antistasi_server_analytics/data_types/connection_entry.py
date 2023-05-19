@@ -1,28 +1,18 @@
 """
-WiP.
-
-Soon.
+WiP
 """
 
 # region [Imports]
 
-
 import datetime
 from typing import Any, Union, Optional, Generator, TypedDict, Mapping, Protocol, runtime_checkable, TextIO, BinaryIO, TYPE_CHECKING
-from pathlib import Path
 import dataclasses
 import enum
-
 
 if TYPE_CHECKING:
     ...
 
 # endregion [Imports]
-
-# region [TODO]
-
-
-# endregion [TODO]
 
 # region [Logging]
 
@@ -31,21 +21,41 @@ if TYPE_CHECKING:
 
 # region [Constants]
 
-THIS_FILE_DIR = Path(__file__).parent.absolute()
 
 # endregion [Constants]
 
 
 @enum.unique
 class ConnectionType(enum.Enum):
-    CONNECTED = enum.auto()
-    CONNECTING = enum.auto()
+    CONNECTING = 10
+    CONNECTED = 11
 
-    DISCONNECTED = enum.auto()
-    DISCONNECTING = enum.auto()
+    DISCONNECTING = 20
+    DISCONNECTED = 21
+
+    @property
+    def is_connecting_sub_type(self) -> bool:
+        """
+        Checks if it is part of the `connecting` process.
+
+        `connecting`-process types have a value between `10` and `19`.
+        """
+        return 10 <= self.value < 20
+
+    @property
+    def is_disconnecting_sub_type(self) -> bool:
+        """
+        Checks if it is part of the `disconnecting` process.
+
+        `disconnecting`-process types have a value between `20` and `29`.
+        """
+        return 20 <= self.value < 30
 
     @classmethod
     def _missing_(cls, value: object) -> Any:
+        """
+        Overwritten to handle input strings caseINsensitive.
+        """
         if isinstance(value, str):
             try:
                 return cls._member_map_[value.upper()]
@@ -62,6 +72,13 @@ class ConnectionType(enum.Enum):
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class ConnectionEntry:
+    """
+    Representation of a single Connection or disconnection event.
+
+    Holds optional data about the log-file also.
+
+    Should only be instantiated through the helper classmethod `from_dict`!
+    """
     connection_type: ConnectionType = dataclasses.field(hash=True)
     steamid: str = dataclasses.field(hash=True)
     name: str = dataclasses.field(hash=True)
@@ -75,12 +92,26 @@ class ConnectionEntry:
     array_data: tuple[float, str, str, bool, int, str] = dataclasses.field(default=tuple(), hash=False, repr=False)
 
     @classmethod
-    def _recorded_at_converter(cls, in_value: Union[str, int, float, datetime.datetime]) -> "ConnectionEntry":
+    def _recorded_at_converter(cls, in_value: Union[str, int, float, datetime.datetime]) -> datetime.datetime:
+        """
+        Converts the value to an datetime in UTC if possible.
+
+        Is able to handle input as string(isoformat), number(timestamp) or datetime object directly.
+
+        Args:
+            in_value (Union[str, int, float, datetime.datetime]): raw value to be converted.
+
+        Raises:
+            ValueError: raised if the value is not an isoformat string, a timestamp number or a datetime object
+
+        Returns:
+            datetime.datetime: aware datetime object in UTC-timezone.
+        """
         if isinstance(in_value, datetime.datetime):
             return in_value.astimezone(tz=datetime.timezone.utc)
 
         if isinstance(in_value, str):
-            return datetime.datetime.fromisoformat(in_value)
+            return datetime.datetime.fromisoformat(in_value).astimezone(tz=datetime.timezone.utc)
 
         if isinstance(in_value, (int, float)):
             return datetime.datetime.fromtimestamp(in_value, tz=datetime.timezone.utc)
@@ -104,6 +135,9 @@ class ConnectionEntry:
 
 
 # region [Main_Exec]
+
 if __name__ == '__main__':
-    ...
+    pass
+
+
 # endregion [Main_Exec]
