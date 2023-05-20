@@ -138,6 +138,9 @@ class ConnectionEntry:
         if isinstance(other, ConnectionEntry):
             return self.recorded_at < other.recorded_at
 
+        if isinstance(other, datetime.datetime):
+            return self.recorded_at < other
+
         return NotImplemented
 
     def __eq__(self, other: object) -> bool:
@@ -152,6 +155,9 @@ class ConnectionEntry:
                                                                                                 "campaign_id",
                                                                                                 "antistasi_version",
                                                                                                 "mods")])
+
+        if isinstance(other, datetime.datetime):
+            return self.recorded_at == other
         return NotImplemented
 
 
@@ -159,5 +165,4 @@ class ConnectionEntry:
 
 if __name__ == '__main__':
     pass
-
 # endregion [Main_Exec]

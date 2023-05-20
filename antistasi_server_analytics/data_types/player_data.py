@@ -90,7 +90,7 @@ class PlayerData:
         self.connections.add(new_connection)
 
     def __str__(self) -> str:
-        return str(self.steamid)
+        return f"{self.steamid}(" + ', '.join(f"{name!r}" for name in self.names) + ")"
 
     def __repr__(self):
         attr = {attr_name: getattr(self, attr_name) for attr_name in (self.__slots__ + ("first_connection", "last_connection"))}
