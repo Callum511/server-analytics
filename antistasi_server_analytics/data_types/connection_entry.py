@@ -156,35 +156,8 @@ class ConnectionEntry:
 
 
 # region [Main_Exec]
+
 if __name__ == '__main__':
-    # x = ConnectionEntry(connection_type=ConnectionType.CONNECTED,
-    #                     steamid="123456",
-    #                     name="wurst",
-    #                     recorded_at=datetime.datetime.now(tz=datetime.timezone.utc),
-    #                     server="mainserver_1",
-    #                     game_map="Wiese",
-    #                     log_file="log_file_123",
-    #                     campaign_id="0001",
-    #                     antistasi_version="1.1.1",
-    #                     mods=[],
-    #                     array_data=[])
-
-    # y = ConnectionEntry(connection_type=ConnectionType.CONNECTED,
-    #                     steamid="789012",
-    #                     name="wuff",
-    #                     recorded_at=datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=4, minutes=25),
-    #                     server="mainserver_1",
-    #                     game_map="Wiese",
-    #                     log_file="log_file_123",
-    #                     campaign_id="0001",
-    #                     antistasi_version="1.1.1",
-    #                     mods=[],
-    #                     array_data=[])
-
-    # print(f"{x<y=}")
-    # print(f"{x>y=}")
-    # print(f"{x==y=}")
-    # print(x)
-    # print(y)
     pass
+
 # endregion [Main_Exec]
