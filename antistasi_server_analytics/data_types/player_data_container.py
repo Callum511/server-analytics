@@ -11,9 +11,10 @@ from typing import (TYPE_CHECKING, TypeVar, TypeGuard, TypeAlias, Final, TypedDi
 from antistasi_server_analytics.data_types.player_data import PlayerData
 from statistics import mean, mode, median
 import datetime
-if TYPE_CHECKING:
+from antistasi_server_analytics.data_types.connection_entry import ConnectionEntry, ConnectionType
 
-    from antistasi_server_analytics.data_types.connection_entry import ConnectionEntry, ConnectionType
+if TYPE_CHECKING:
+    ...
 
 # endregion [Imports]
 

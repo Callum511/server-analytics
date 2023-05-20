@@ -9,6 +9,7 @@ from typing import Any, Union, Optional, Generator, TypedDict, Mapping, Protocol
 import dataclasses
 import enum
 from functools import total_ordering
+
 if TYPE_CHECKING:
     ...
 

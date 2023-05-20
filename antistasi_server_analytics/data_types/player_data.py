@@ -11,9 +11,10 @@ from typing import (TYPE_CHECKING, TypeVar, TypeGuard, TypeAlias, Final, TypedDi
 from datetime import datetime, timezone, timedelta
 import heapq
 from sortedcontainers import SortedSet
+from antistasi_server_analytics.data_types.connection_entry import ConnectionEntry
 
 if TYPE_CHECKING:
-    from antistasi_server_analytics.data_types.connection_entry import ConnectionEntry
+    ...
 
 # endregion [Imports]
 
