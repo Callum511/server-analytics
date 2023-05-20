@@ -8,7 +8,7 @@ import datetime
 from typing import Any, Union, Optional, Generator, TypedDict, Mapping, Protocol, runtime_checkable, TextIO, BinaryIO, TYPE_CHECKING
 import dataclasses
 import enum
-
+from functools import total_ordering
 if TYPE_CHECKING:
     ...
 
@@ -70,6 +70,7 @@ class ConnectionType(enum.Enum):
         return super()._missing_(value)
 
 
+@total_ordering
 @dataclasses.dataclass(frozen=True, slots=True)
 class ConnectionEntry:
     """
@@ -133,11 +134,57 @@ class ConnectionEntry:
                    mods=frozenset(in_dict.get("mods", [])),
                    array_data=tuple(in_dict.get("array_data", [])))
 
+    def __lt__(self, other: object) -> bool:
+        if isinstance(other, ConnectionEntry):
+            return self.recorded_at < other.recorded_at
+
+        return NotImplemented
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, ConnectionEntry):
+            return all([getattr(self, attr_name) == getattr(other, attr_name) for attr_name in ("recorded_at",
+                                                                                                "steamid",
+                                                                                                "connection_type",
+                                                                                                "name",
+                                                                                                "log_file",
+                                                                                                "server",
+                                                                                                "game_map",
+                                                                                                "campaign_id",
+                                                                                                "antistasi_version",
+                                                                                                "mods")])
+        return NotImplemented
+
 
 # region [Main_Exec]
-
 if __name__ == '__main__':
+    # x = ConnectionEntry(connection_type=ConnectionType.CONNECTED,
+    #                     steamid="123456",
+    #                     name="wurst",
+    #                     recorded_at=datetime.datetime.now(tz=datetime.timezone.utc),
+    #                     server="mainserver_1",
+    #                     game_map="Wiese",
+    #                     log_file="log_file_123",
+    #                     campaign_id="0001",
+    #                     antistasi_version="1.1.1",
+    #                     mods=[],
+    #                     array_data=[])
+
+    # y = ConnectionEntry(connection_type=ConnectionType.CONNECTED,
+    #                     steamid="789012",
+    #                     name="wuff",
+    #                     recorded_at=datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=4, minutes=25),
+    #                     server="mainserver_1",
+    #                     game_map="Wiese",
+    #                     log_file="log_file_123",
+    #                     campaign_id="0001",
+    #                     antistasi_version="1.1.1",
+    #                     mods=[],
+    #                     array_data=[])
+
+    # print(f"{x<y=}")
+    # print(f"{x>y=}")
+    # print(f"{x==y=}")
+    # print(x)
+    # print(y)
     pass
-
-
 # endregion [Main_Exec]
