@@ -41,7 +41,7 @@ class ConnectionType(enum.Enum):
 
         `connecting`-process types have a value between `10` and `19`.
         """
-        return 10 <= self.value < 20
+        return self.value >= 10 and self.value < 20
 
     @property
     def is_disconnecting_sub_type(self) -> bool:
@@ -50,7 +50,7 @@ class ConnectionType(enum.Enum):
 
         `disconnecting`-process types have a value between `20` and `29`.
         """
-        return 20 <= self.value < 30
+        return self.value >= 20 and self.value < 30
 
     @classmethod
     def _missing_(cls, value: object) -> Any:
@@ -112,6 +112,11 @@ class ConnectionEntry:
         if isinstance(in_value, datetime.datetime):
             return in_value.astimezone(tz=datetime.timezone.utc)
 
+        try:
+            in_value = float(in_value)
+        except TypeError:
+            pass
+
         if isinstance(in_value, str):
             return datetime.datetime.fromisoformat(in_value).astimezone(tz=datetime.timezone.utc)
 
@@ -122,11 +127,14 @@ class ConnectionEntry:
 
     @classmethod
     def from_dict(cls, in_dict: Mapping[str, object]) -> "ConnectionEntry":
-
+        try:
+            raw_recorded_at = in_dict["recorded_at"]
+        except KeyError:
+            raw_recorded_at = in_dict["timestamp"]
         return cls(connection_type=ConnectionType(in_dict["connection_type"]),
                    steamid=in_dict["player_id"],
                    name=in_dict["player_name"],
-                   recorded_at=cls._recorded_at_converter(in_dict["recorded_at"]),
+                   recorded_at=cls._recorded_at_converter(raw_recorded_at),
                    server=in_dict.get("server", None),
                    game_map=in_dict.get("game_map", None),
                    log_file=in_dict.get("log_file", None),

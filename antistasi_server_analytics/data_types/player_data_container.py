@@ -9,7 +9,7 @@ from typing import (TYPE_CHECKING, TypeVar, TypeGuard, TypeAlias, Final, TypedDi
                     no_type_check, no_type_check_decorator, overload, get_type_hints, cast, Protocol, runtime_checkable, NoReturn, NewType, Literal, AnyStr, IO, BinaryIO, TextIO, Any)
 
 from antistasi_server_analytics.data_types.player_data import PlayerData
-from statistics import mean, mode, median
+from statistics import mean, mode, median, multimode, stdev, quantiles
 import datetime
 from antistasi_server_analytics.data_types.connection_entry import ConnectionEntry, ConnectionType
 
@@ -38,6 +38,10 @@ class PlayerDataContainer:
     def players(self) -> list["PlayerData"]:
         return list(self.steamid_to_player_data_map.values())
 
+    @property
+    def amount_all_connections(self) -> int:
+        return sum(len(p.connections) for p in self.players)
+
     def add_data(self, data: "ConnectionEntry") -> None:
         player = self.get(data.steamid, create_if_missing=True)
         player.add_connection(data)
@@ -60,14 +64,23 @@ class PlayerDataContainer:
     def get_all_sorted(self, sort_by, reverse=False) -> list["PlayerData"]:
         return sorted(self.players, key=lambda x: getattr(x, sort_by), reverse=reverse)
 
-    def average_amount_connections(self) -> int:
+    def average_amount_connections(self) -> float:
         return mean(i.amount_connections for i in self.players)
 
-    def median_amount_connections(self) -> int:
+    def median_amount_connections(self) -> float:
         return median(i.amount_connections for i in self.players)
 
     def mode_amount_connections(self) -> int:
         return mode(i.amount_connections for i in self.players)
+
+    def multimode_amount_connections(self) -> list[int]:
+        return multimode(i.amount_connections for i in self.players)
+
+    def stdev_amount_connections(self) -> float:
+        return stdev(i.amount_connections for i in self.players)
+
+    def quantiles_amount_connections(self) -> list[float]:
+        return quantiles(i.amount_connections for i in self.players)
 
     def amount_unique_all_time(self) -> int:
         return len(self.players)

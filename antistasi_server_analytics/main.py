@@ -6,12 +6,6 @@ import os
 from pathlib import Path
 
 
-class LogFileTimeFrame(TypedDict):
-    start: datetime.datetime
-    end: datetime.datetime
-    delta: datetime.timedelta
-
-
 class DataEntry(TypedDict):
     recorded_at: datetime.datetime
     player_id: str
@@ -19,7 +13,6 @@ class DataEntry(TypedDict):
     player_array_data: Tuple[float, str, str, bool, int, str]
     original_message: str
     log_file: str
-    log_file_time_frame: LogFileTimeFrame
     game_map: str
     campaign_id: str
     antistasi_version: str
@@ -33,9 +26,6 @@ def _load_data_entries_from_file(in_file: Path) -> Generator[DataEntry, None, No
             _item["recorded_at"] = datetime.datetime.fromtimestamp(_item["recorded_at"], tz=datetime.timezone.utc)
             _item["player_array_data"] = tuple(_item["player_array_data"])
             _item["mods"] = tuple(_item["mods"])
-            _item["log_file_time_frame"] = LogFileTimeFrame(start=datetime.datetime.fromtimestamp(_item["log_file_time_frame"]["start"], tz=datetime.timezone.utc),
-                                                            end=datetime.datetime.fromtimestamp(_item["log_file_time_frame"]["end"], tz=datetime.timezone.utc),
-                                                            delta=datetime.timedelta(seconds=_item["log_file_time_frame"]["delta"]))
 
             yield DataEntry(**_item)
 
@@ -241,7 +231,7 @@ def analyse_from_json(folder: os.PathLike, file_prefix: str = "player_data") -> 
 def main():
     # data = read_csv("player_data.csv")
     # players = analyse(data)
-    players = analyse_from_json(folder=r"YOUR FOLDER PATH HERE")
+    players = analyse_from_json(folder=r"D:\Dropbox\hobby\Modding\Programs\Github\My_Repos\Antistasi_Logbook\antistasi_logbook\debug_dump\connection_data_json")
     players_sorted = players.get_all_sorted("connections", True)
     recent_players = []
     frequent_flyers = []

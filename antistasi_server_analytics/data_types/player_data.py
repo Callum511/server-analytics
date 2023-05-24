@@ -77,15 +77,15 @@ class PlayerData:
 
     @property
     def seen24h(self):
-        return self.last_connection > (datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(hours=24))
+        return self.last_connection > (datetime.now(tz=timezone.utc) - timedelta(hours=24))
 
     @property
     def seen7d(self):
-        return self.last_connection > (datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=7))
+        return self.last_connection > (datetime.now(tz=timezone.utc) - timedelta(days=7))
 
     @property
     def seen30d(self):
-        return self.last_connection > (datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=30))
+        return self.last_connection > (datetime.now(tz=timezone.utc) - timedelta(days=30))
 
     def add_connection(self, new_connection: "ConnectionEntry") -> None:
         self.connections.add(new_connection)
