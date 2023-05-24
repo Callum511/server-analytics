@@ -6,10 +6,25 @@ $requirementsFileDev = Join-Path -Path $repoRootFolder -ChildPath "tools\python_
 $requirementsFileTest = Join-Path -Path $repoRootFolder -ChildPath "tools\python_test_requirements.txt"
 
 $venvDir = Join-Path -Path $repoRootFolder -ChildPath ".venv"
+# check platform
+$platform = $env:OS
+if ($platform -eq "Windows_NT") {
+    Write-Host "Windows"
+} else {
+    Write-Host "Linux"
+}
 
-$rawBasePythonDir = ((python -c "import sys;print(sys.base_prefix);sys.exit()") | Out-String).Trim()
-$basePythonDir = Resolve-Path $rawBasePythonDir
-$BasePythonExe = Join-Path -Path $basePythonDir -ChildPath "python.exe"
+if ($platform -eq "Windows_NT") {
+    $rawBasePythonDir = ho((python -c "import sys;print(sys.base_prefix);sys.exit()") | Out-String).Trim()
+    $basePythonDir = Resolve-Path $rawBasePythonDir
+    $BasePythonExe = Join-Path -Path $basePythonDir -ChildPath "python.exe"
+} else {
+    $rawBasePythonDir = "/usr/bin"
+    $basePythonDir = Resolve-Path $rawBasePythonDir
+    $BasePythonExe = Join-Path -Path $basePythonDir -ChildPath "python3"
+}
+
+
 
 
 
@@ -36,7 +51,11 @@ Write-Host $(`
 & $BasePythonExe.Trim() -m venv --clear --upgrade-deps $venvDir
 
 if ($? -eq $False) {exit}
-$venvExecutable = Join-Path -Path $venvDir -ChildPath "Scripts\python.exe"
+if ($platform -eq "Windows_NT") {
+    $venvExecutable = Join-Path -Path $venvDir -ChildPath "Scripts\python.exe"
+} else {
+    $venvExecutable = Join-Path -Path $venvDir -ChildPath "bin/python3"
+}
 
 & $venvExecutable -m pip install --upgrade wheel
 & $venvExecutable -m pip install --upgrade PEP517
