@@ -23,7 +23,8 @@ from ._base_loader import BaseLoader
 from antistasi_server_analytics.data_types import ConnectionEntry
 
 if TYPE_CHECKING:
-    ...
+    from antistasi_server_analytics.data_types.aux_data_types import AuxCache
+
 
 # endregion [Imports]
 
@@ -48,11 +49,18 @@ class FolderLoader(BaseLoader):
     __slots__ = ("_sub_items", "_sub_loader")
     specificity = 5
     file_extensions: tuple[str] = ("",)
+    has_sub_loader: bool = True
 
     def __init__(self, source: Union[str, os.PathLike, Path]):
         self._source = Path(source).resolve()
         self._sub_items: set[Path] = self._get_sub_items()
-        self._sub_loader: list[BaseLoader] = self._get_sub_loader()
+
+    @property
+    def source_name(self) -> str:
+        return str(self._source.name)
+
+    def amount_connection_data_items(self) -> int:
+        return len(self._sub_items)
 
     def _is_sub_item(self, item: Path) -> bool:
         if item.is_dir() is True:
@@ -67,20 +75,21 @@ class FolderLoader(BaseLoader):
                 item = Path(dirname, file).resolve()
                 if self._is_sub_item(item):
                     sub_items.add(item)
-        return sub_items
+        return sorted(sub_items)
 
-    def _get_sub_loader(self) -> list[BaseLoader]:
-        sub_loader = []
+    def _iter_subloader(self) -> Generator[BaseLoader, None, None]:
         for item in self._sub_items:
-            sub_loader.append(self.loader_container.create_loader(item))
+            sub_loader = self.loader_container.create_loader(item)
+            yield from sub_loader.get_resolved_loaders()
 
-        return sub_loader
-
-    def iter_entries(self) -> Generator["ConnectionEntry", None, None]:
+    def iter_entries(self, cache: "AuxCache" = None) -> Generator["ConnectionEntry", None, None]:
         for loader in self._sub_loader:
-            yield from loader.iter_entries()
+            yield from loader.iter_entries(cache=cache)
 
-    @classmethod
+    def get_resolved_loaders(self) -> list[BaseLoader]:
+        return list(self._iter_subloader())
+
+    @ classmethod
     def can_load(cls, input_item: object) -> bool:
         try:
             input_path = Path(input_item).resolve()

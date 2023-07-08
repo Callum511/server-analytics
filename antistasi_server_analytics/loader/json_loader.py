@@ -30,7 +30,8 @@ from ._base_loader import BaseLoader
 from antistasi_server_analytics.data_types import ConnectionEntry
 
 if TYPE_CHECKING:
-    ...
+    from antistasi_server_analytics.data_types.aux_data_types import AuxCache
+
 
 # endregion [Imports]
 
@@ -62,19 +63,36 @@ class JsonLoader(BaseLoader):
         else:
             self._source = Path(source).resolve()
 
-    def _iter_from_path(self) -> Generator[ConnectionEntry, None, None]:
-        with self._source.open("rb") as binary_f:
-            yield from (ConnectionEntry.from_dict(item) for item in json.loads(binary_f.read()))
-
-    def _iter_from_bytes(self) -> Generator[ConnectionEntry, None, None]:
-        yield from (ConnectionEntry.from_dict(item) for item in json.loads(self._source))
-
-    def iter_entries(self) -> Generator[ConnectionEntry, None, None]:
+    @property
+    def source_name(self) -> str:
         if isinstance(self._source, bytes):
-            yield from self._iter_from_bytes()
+            return "bytes"
+
+        return self._source.name
+
+    def amount_connection_data_items(self) -> int:
+        if isinstance(self._source, bytes):
+            return len(json.loads(self._source))
+
+        elif isinstance(self._source, Path):
+            return len(json.loads(self._source.read_bytes()))
+
+    def _iter_from_path(self, cache: "AuxCache" = None) -> Generator[ConnectionEntry, None, None]:
+        with self._source.open("rb") as binary_f:
+            yield from (ConnectionEntry.from_dict(item, cache=cache) for item in json.loads(binary_f.read()))
+
+    def _iter_from_bytes(self, cache: "AuxCache" = None) -> Generator[ConnectionEntry, None, None]:
+        yield from (ConnectionEntry.from_dict(item, cache=cache) for item in json.loads(self._source))
+
+    def iter_entries(self, cache: "AuxCache" = None) -> Generator[ConnectionEntry, None, None]:
+        if isinstance(self._source, bytes):
+            yield from self._iter_from_bytes(cache=cache)
 
         else:
-            yield from self._iter_from_path()
+            yield from self._iter_from_path(cache=cache)
+
+    def get_resolved_loaders(self) -> list[BaseLoader]:
+        return [self]
 
     @classmethod
     def can_load(cls, input_item: object) -> bool:

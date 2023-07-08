@@ -1,31 +1,39 @@
+
+import inspect
+from pathlib import Path
+
+import pkgutil
+from traceback import print_tb
+import sys
+import importlib
+from types import ModuleType
 from ._base_loader import BaseLoader
 from ._loader_collector import LoaderContainer
 
-from .json_loader import JsonLoader
-from .folder_loader import FolderLoader
-from .zip_loader import ZipLoader
-from .csv_loader import CSVLoader
+
+def _extract_loaders_from_module(name: str) -> ModuleType:
+
+    def _predicate(in_object: object) -> bool:
+        return inspect.isclass(in_object) and not inspect.isabstract(in_object) and issubclass(in_object, BaseLoader)
+
+    module = importlib.import_module(name)
+    for loader_class_name, loader_class_object in inspect.getmembers(module, predicate=_predicate):
+        yield loader_class_object
 
 
-def _initialize_loader_container() -> LoaderContainer:
-    """
-    CURRENTLY UNUSED!
+def _import_data_loaders_from_folder() -> frozenset["BaseLoader"]:
 
+    all_loaders = set()
 
-    """
+    for sub_module in pkgutil.walk_packages(__path__, __name__ + '.', onerror=print_tb):
+        for _loader_class in _extract_loaders_from_module(sub_module.name):
+            all_loaders.add(_loader_class)
 
-    def all_subclasses_recursively(klass: type) -> set[type]:
-        return set(klass.__subclasses__()).union([s for c in klass.__subclasses__() for s in all_subclasses_recursively(c)])
-
-    loader_collector = LoaderContainer()
-    for sub_class in all_subclasses_recursively(BaseLoader):
-        loader_collector.add_loader(sub_class)
-
-    return loader_collector
+    return frozenset(all_loaders)
 
 
 LOADER_CONTAINER = LoaderContainer()
-LOADER_CONTAINER.add_loader(JsonLoader)
-LOADER_CONTAINER.add_loader(FolderLoader)
-LOADER_CONTAINER.add_loader(ZipLoader)
-LOADER_CONTAINER.add_loader(CSVLoader)
+ALL_LOADER = _import_data_loaders_from_folder()
+
+
+LOADER_CONTAINER.add_loaders(ALL_LOADER)

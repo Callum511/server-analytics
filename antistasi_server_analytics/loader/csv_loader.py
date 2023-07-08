@@ -24,13 +24,16 @@ from antistasi_server_analytics.data_types import ConnectionEntry
 
 import csv
 
+from antistasi_server_analytics.loader._base_loader import BaseLoader
+
 
 from ._base_loader import BaseLoader
 
 from antistasi_server_analytics.data_types import ConnectionEntry
 
 if TYPE_CHECKING:
-    ...
+    from antistasi_server_analytics.data_types.aux_data_types import AuxCache
+
 
 # endregion [Imports]
 
@@ -64,22 +67,32 @@ class CSVLoader(BaseLoader):
         else:
             self._source = Path(source).resolve()
 
-    def _iter_from_path(self) -> Generator[ConnectionEntry, None, None]:
+    def amount_connection_data_items(self) -> int:
+        if isinstance(self._source, bytes):
+            return len(self._source.decode(encoding='utf-8', errors='ignore').splitlines()) - 1
+
+        elif isinstance(self._source, Path):
+            return len(self._source.read_text(encoding='utf-8', errors='ignore').splitlines()) - 1
+
+    def _iter_from_path(self, cache: "AuxCache" = None) -> Generator[ConnectionEntry, None, None]:
         with self._source.open("r", encoding='utf-8', errors='ignore', newline="") as f:
             csv_reader = csv.DictReader(f, delimiter=self.delimiter, quotechar=self.quote_char)
 
-            yield from (ConnectionEntry.from_dict(row) for row in csv_reader)
+            yield from (ConnectionEntry.from_dict(row, cache=cache) for row in csv_reader)
 
-    def _iter_from_bytes(self) -> Generator[ConnectionEntry, None, None]:
+    def _iter_from_bytes(self, cache: "AuxCache" = None) -> Generator[ConnectionEntry, None, None]:
         csv_reader = csv.DictReader(self._source.decode(encoding='utf-8', errors='ignore').splitlines(), delimiter=self.delimiter, quotechar=self.quote_char)
-        yield from (ConnectionEntry.from_dict(row) for row in csv_reader)
+        yield from (ConnectionEntry.from_dict(row, cache=cache) for row in csv_reader)
 
-    def iter_entries(self) -> Generator[ConnectionEntry, None, None]:
+    def iter_entries(self, cache: "AuxCache" = None) -> Generator[ConnectionEntry, None, None]:
         if isinstance(self._source, bytes):
-            yield from self._iter_from_bytes()
+            yield from self._iter_from_bytes(cache=cache)
 
         else:
-            yield from self._iter_from_path()
+            yield from self._iter_from_path(cache=cache)
+
+    def get_resolved_loaders(self) -> list[BaseLoader]:
+        return [self]
 
     @classmethod
     def can_load(cls, input_item: object) -> bool:

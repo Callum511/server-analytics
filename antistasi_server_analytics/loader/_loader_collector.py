@@ -21,7 +21,11 @@ from collections.abc import (AsyncGenerator, AsyncIterable, AsyncIterator, Await
 
 from sortedcontainers import SortedDict, SortedList, SortedSet
 
-
+import sys
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 from ._base_loader import BaseLoader
 if TYPE_CHECKING:
     ...
@@ -69,6 +73,12 @@ class LoaderContainer:
 
         loader_class.loader_container = self
         return loader_class
+
+    def add_loaders(self, loader_classes: Iterable["BaseLoader"]) -> Self:
+        for loader_class in loader_classes:
+            self.add_loader(loader_class)
+
+        return self
 
     def determine_loader(self, item: object) -> type[BaseLoader]:
         try:

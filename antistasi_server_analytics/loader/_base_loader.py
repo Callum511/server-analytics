@@ -16,12 +16,14 @@ from typing import (TYPE_CHECKING, TypeVar, TypeGuard, TypeAlias, Final, TypedDi
 from collections import Counter, ChainMap, deque, namedtuple, defaultdict
 from collections.abc import (AsyncGenerator, AsyncIterable, AsyncIterator, Awaitable, ByteString, Callable, Collection, Container, Coroutine, Generator,
                              Hashable, ItemsView, Iterable, Iterator, KeysView, Mapping, MappingView, MutableMapping, MutableSequence, MutableSet, Reversible, Sequence, Set, Sized, ValuesView)
-
-
+from contextlib import nullcontext
+from threading import Lock, RLock
 if TYPE_CHECKING:
     from antistasi_server_analytics.loader._loader_collector import LoaderContainer
     from antistasi_server_analytics.data_types import ConnectionEntry, PlayerDataContainer
+    from antistasi_server_analytics.data_types.aux_data_types import AuxCache
 
+    from rich.progress import Task, Progress
 # endregion [Imports]
 
 # region [TODO]
@@ -47,9 +49,15 @@ T_PLAYER_CONTAINER = TypeVar("T_PLAYER_CONTAINER", bound="PlayerDataContainer")
 class BaseLoader(ABC):
     __slots__ = ("_source",)
     loader_container: "LoaderContainer" = None
+    has_sub_loader: bool = False
+    concurrent_priority: int = 10
 
     def __init__(self, source: object):
         self._source = source
+
+    @property
+    def source_name(self) -> str:
+        return str(self._source)
 
     @classmethod
     @abstractmethod
@@ -57,22 +65,48 @@ class BaseLoader(ABC):
         ...
 
     @abstractmethod
-    def iter_entries(self) -> Generator["ConnectionEntry", None, None]:
+    def amount_connection_data_items(self) -> int:
         ...
 
-    def add_to_player_container(self, player_container: T_PLAYER_CONTAINER, data_filter: Callable[["ConnectionEntry"], bool] = None) -> T_PLAYER_CONTAINER:
+    @abstractmethod
+    def iter_entries(self, cache: "AuxCache" = None) -> Generator["ConnectionEntry", None, None]:
+        ...
+
+    @abstractmethod
+    def get_resolved_loaders(self) -> list["BaseLoader"]:
+        ...
+
+    def add_to_player_container(self,
+                                player_container: T_PLAYER_CONTAINER,
+                                data_filter: Callable[["ConnectionEntry"], bool] = None,
+                                progress_bar: "Progress" = None,
+                                progress_task_id: int = None) -> T_PLAYER_CONTAINER:
+
+        if progress_bar is not None:
+            progress_bar.reset(progress_task_id, total=self.amount_connection_data_items(), description=f"loading from {self.source_name!r}...")
+            # progress_bar.update(progress_task_id, total=self.amount_connection_data_items())
+        cache = player_container._aux_cache
         if data_filter is None:
 
-            for entry in self.iter_entries():
-                player_container.add_data(entry)
+            for entry in self.iter_entries(cache=cache):
+                if entry.name != "__SERVER__":
 
-        else:
-            for entry in self.iter_entries():
-                if data_filter(entry) is True:
                     player_container.add_data(entry)
+                    if progress_bar is not None:
+                        progress_bar.advance(progress_task_id)
+        else:
+            for entry in self.iter_entries(cache=cache):
+                if entry.name != "__SERVER__":
 
+                    if data_filter(entry) is True:
+
+                        player_container.add_data(entry)
+                    if progress_bar is not None:
+                        progress_bar.advance(progress_task_id, advance=1)
         return player_container
 
+    def __len__(self) -> int:
+        return self.amount_connection_data_items()
 # region [Main_Exec]
 
 

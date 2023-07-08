@@ -24,7 +24,8 @@ from ._base_loader import BaseLoader
 from antistasi_server_analytics.data_types import ConnectionEntry
 
 if TYPE_CHECKING:
-    ...
+    from antistasi_server_analytics.data_types.aux_data_types import AuxCache
+
 
 # endregion [Imports]
 
@@ -49,18 +50,21 @@ class ZipLoader(BaseLoader):
     __slots__ = tuple()
     specificity = 5
     file_extensions: tuple[str] = (".zip",)
+    has_sub_loader: bool = True
+    concurrent_priority: int = -1
 
     def __init__(self, source: Union[str, os.PathLike, Path]):
         self._source = Path(source).resolve()
 
-    def _get_sub_items(self) -> set[Path]:
-        sub_items = set()
-        for dirname, folderlist, filelist in os.walk(self._source):
-            for file in filelist:
-                item = Path(dirname, file).resolve()
-                if self._is_sub_item(item):
-                    sub_items.add(item)
-        return sub_items
+    @property
+    def source_name(self) -> str:
+        return str(self._source.name)
+
+    def amount_sub_loader(self) -> int:
+        return len(list(self._iter_sub_loader()))
+
+    def amount_connection_data_items(self) -> int:
+        return sum(sl.amount_connection_data_items() for sl in self._iter_sub_loader())
 
     def _iter_sub_items(self) -> Generator[tuple[bytes, str], None, None]:
         with ZipFile(self._source, "r") as zippy:
@@ -74,9 +78,12 @@ class ZipLoader(BaseLoader):
         for data, suffix in self._iter_sub_items():
             yield self.loader_container._file_loader_extension_map[suffix][0](data)
 
-    def iter_entries(self) -> Generator["ConnectionEntry", None, None]:
+    def iter_entries(self, cache: "AuxCache" = None) -> Generator["ConnectionEntry", None, None]:
         for loader in self._iter_sub_loader():
-            yield from loader.iter_entries()
+            yield from loader.iter_entries(cache=cache)
+
+    def get_resolved_loaders(self) -> list[BaseLoader]:
+        return list(self._iter_sub_loader())
 
     @classmethod
     def can_load(cls, input_item: object) -> bool:

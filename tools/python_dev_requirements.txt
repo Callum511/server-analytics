@@ -8,3 +8,4 @@ line_profiler[all]
 isort
 autoflake
 flit
+matplotlib
